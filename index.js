@@ -3,23 +3,50 @@ const express = require("express");
 const app = express();
 const port = 9000;
 
+app.use(express.json());
+
+const mysql = require("mysql2");
+
+const connection = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "rootroot",
+    database: "restaurant",
+});
+
+connection.connect((err) => {
+    if (err) {
+        console.error("Error conectándose: " + err);
+        return;
+    }
+
+    console.log("Base de datos conectada");
+});
+
 //EJ 1
 app.get("/menu", (req, res) =>{
-    res.json(menu);
+    //res.json(menu);
+    connection.query("SELECT * FROM platos", (err, rows) => {
+        if (err) {
+            console.error("Error consultando: " + err);
+            return;
+        }
+    
+        console.log(rows);
+    });
 });
 
 //EJ 2
 app.get("/menu/:id", (req, res) =>{
     const id = parseInt(req.params.id);
 
+    if(!id) return res.status(404).send("Not found.");
+
     const plato = menu.find((plato) => plato.id === id);
 
-    if(!plato){
-        res.status(404).send("Not found.");
-    }
-    else{
-        res.status(200).send(plato);
-    }
+    if(!plato) return res.status(404).send("Not found.");
+
+    res.status(200).send(plato);
 });
 
 //EJ 3
@@ -41,7 +68,6 @@ app.get("/bebidas", (req, res) =>{
 });
 
 //EJ 6
-app.use(express.json());
 app.post("/pedido", (req, res) =>{
     const pedido = req.body.productos;
     let precio = 0;
