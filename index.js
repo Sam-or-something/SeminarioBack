@@ -6,6 +6,7 @@ const port = 9000;
 app.use(express.json());
 
 const mysql = require("mysql2");
+const { json } = require('express');
 
 const connection = mysql.createConnection({
     host: "localhost",
@@ -26,14 +27,96 @@ connection.connect((err) => {
 //EJ 1
 app.get("/menu", (req, res) =>{
     //res.json(menu);
-    connection.query("SELECT * FROM platos", (err, rows) => {
+    connection.query("SELECT Nombre, Precio, Descripcion FROM platos", (err, rows) => {
         if (err) {
             console.error("Error consultando: " + err);
             return;
         }
-    
-        console.log(rows);
+        res.json(rows);
     });
+});
+
+//EJ 2
+app.get("/menu/:id", (req, res) =>{
+    const id = parseInt(req.params.id);
+
+    if(!id) return res.status(404).send("Not found");
+
+    connection.query("SELECT Nombre, Precio, Descripcion FROM platos WHERE ID = ?", [id], (err, rows) => {
+        if (err) {
+            console.error("Error consultando: " + err);
+            return;
+        }
+        if(rows.length == 0) return res.status(404).send("Not found");
+
+        res.json(rows);
+    });
+
+});
+
+//EJ 3
+app.get("/principales", (req, res) =>{
+    connection.query("SELECT Nombre, Precio, Descripcion FROM platos WHERE Tipo = ?", ["principal"], (err, rows) => {
+        if (err) {
+            console.error("Error consultando: " + err);
+            return;
+        }
+        if(rows.length == 0) return res.status(404).send("Not found");
+
+        res.json(rows);
+    });
+});
+
+//EJ 4
+app.get("/postres", (req, res) =>{
+    connection.query("SELECT Nombre, Precio, Descripcion FROM platos WHERE Tipo = ?", ["postre"], (err, rows) => {
+        if (err) {
+            console.error("Error consultando: " + err);
+            return;
+        }
+        if(rows.length == 0) return res.status(404).send("Not found");
+
+        res.json(rows);
+    });
+});
+
+//EJ 5
+app.get("/bebidas", (req, res) =>{
+    connection.query("SELECT Nombre, Precio, Descripcion FROM platos WHERE Tipo = ?", ["bebida"], (err, rows) => {
+        if (err) {
+            console.error("Error consultando: " + err);
+            return;
+        }
+        if(rows.length == 0) return res.status(404).send("Not found");
+
+        res.json(rows);
+    });
+});
+
+//EJ 6
+app.post("/pedido", (req, res)=>{
+    const pedido = req.body.productos;
+    let precio = 0;
+
+    pedido.forEach(producto => {
+        connection.query("SELECT Precio FROM platos WHERE ID = ?", [producto.id], (err, precioDe) => {
+            if (err) {
+                console.error("Error consultando: " + err);
+                return;
+            }
+            if(!precioDe) return res.status(404).send("Not found");
+
+            res.send(precioDe);
+
+            precio += parseInt(precioDe);
+        });
+    });
+    res.json(precio);
+});
+
+/*//EJ 1
+app.get("/menu", (req, res) =>{
+    res.json(menu);
 });
 
 //EJ 2
@@ -77,7 +160,7 @@ app.post("/pedido", (req, res) =>{
         precio += plato.precio * producto.cantidad;
     });
     res.json(precio);
-});
+});*/
 
 
 const users = [
